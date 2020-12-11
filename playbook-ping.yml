@@ -1,0 +1,11 @@
+---
+- name: Playbook for Ping My Servers
+  hosts: all
+  become: true
+
+  tasks:
+  - name: Ping My Servers
+    ping:
+
+  - name: Verify OS_Family
+    debug: var=ansible_os_family
