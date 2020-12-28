@@ -20,7 +20,7 @@
       #shell: sed -i '/#ClientAliveInterval 0/a ClientAliveInterval 300' /etc/ssh/sshd_config
     notify: reload sshd.service
 
-#####sudo apt-get update && sudo apt-get dist-upgrade -y
+##### sudo apt-get update && sudo apt-get dist-upgrade -y
   - block:
       - name: sudo apt-get update
         apt: update_cache=yes force_apt_get=yes cache_valid_time=3600
@@ -28,7 +28,7 @@
         apt: upgrade=dist force_apt_get=yes
     when: ansible_os_family=="Debian"
 
-#####sudo yum update -y
+##### sudo yum update -y
   - block:
       - name: sudo yum update cache
         yum: update_cache=yes
@@ -38,7 +38,7 @@
         yum: name=epel-release state=latest
     when: ansible_os_family=="RedHat"
 
-#####adduser anton on Ubuntu
+##### adduser anton on Ubuntu
   - block:
       - name: adduser anton to sudo group
         user:
@@ -46,11 +46,11 @@
           password: "{{ anton_sudo_password | password_hash('sha512') }}"
           shell: /bin/bash
           groups: sudo
-          append: true
+          append: yes
           update_password: on_create 
     when: ansible_os_family=="Debian"
 
-#####adduser anton on CentOS
+##### adduser anton on CentOS
   - block:
       - name: adduser anton to wheel group
         user:
@@ -58,11 +58,29 @@
           password: "{{ anton_sudo_password | password_hash('sha512') }}"
           shell: /bin/bash
           groups: wheel
-          append: true 
+          append: yes
           update_password: on_create
     when: ansible_os_family=="RedHat"
 
-#####install packages on Ubuntu
+##### adduser ansible
+  - name: adduser ansible
+    user:
+      name: ansible
+      password: "{{ ansible_sudo_password | password_hash('sha512') }}"
+      shell: /bin/bash
+      update_password: on_create
+
+##### Create folders
+  - name: Create .ssh folder
+    file: path=/home/anton/.ssh state=directory mode=0755
+  - name: Create ansible folder
+    file: path=/home/anton/ansible state=directory mode=0755
+  - name: Create gitproject folder
+    file: path=/home/anton/gitproject state=directory mode=0755
+  - name: Create files folder
+    file: path=/home/anton/files state=directory mode=0755
+
+##### Install packages on Ubuntu
   - block:
       - name: sudo apt-get install packages
         apt:
@@ -71,7 +89,7 @@
           force_apt_get: yes
     when: ansible_os_family=="Debian"
 
-#####install packages on CentOS
+##### Install packages on CentOS
   - block:
       - name: sudo yum install packages
         yum:
@@ -79,61 +97,7 @@
           state: latest
     when: ansible_os_family=="RedHat"
 
-#####Create folders on Ubuntu
-  - block:
-      - name: Create .ssh folder
-        file: path=/home/anton/.ssh state=directory mode=0755
-
-      - name: Create ansible folder
-        file: path=/home/anton/ansible state=directory mode=0755
-
-      - name: Create gitproject folder
-        file: path=/home/anton/gitproject state=directory mode=0755
-
-      - name: Create files folder
-        file: path=/home/anton/files state=directory mode=0755
-    when: ansible_os_family=="Debian"
-
-#####Create folders on CentOS
-  - block:
-      - name: Create .ssh folder
-        file: path=/home/anton/.ssh state=directory mode=0755
-
-      - name: Create ansible folder
-        file: path=/home/anton/ansible state=directory mode=0755
-
-      - name: Create gitproject folder
-        file: path=/home/anton/gitproject state=directory mode=0755
-
-      - name: Create files folder
-        file: path=/home/anton/files state=directory mode=0755
-    when: ansible_os_family=="RedHat"
-
-#####adduser ansible on Ubuntu
-  - block:
-      - name: adduser ansible to sudo group
-        user:
-          name: ansible
-          password: "{{ ansible_sudo_password | password_hash('sha512') }}"
-          shell: /bin/bash
-          groups: sudo
-          append: true
-          update_password: on_create
-    when: ansible_os_family=="Debian"
-
-#####adduser ansible on CentOS
-  - block:
-      - name: adduser ansible to wheel group
-        user:
-          name: ansible
-          password: "{{ ansible_sudo_password | password_hash('sha512') }}"
-          shell: /bin/bash
-          groups: wheel
-          append: true
-          update_password: on_create
-    when: ansible_os_family=="RedHat"
-
-#####Install && Start Web-Server on Ubuntu
+##### Install && Start Web-Server on Ubuntu
   - block:
       - name: Install apache2 to Ubuntu
         apt: name=apache2 state=latest
@@ -141,7 +105,7 @@
         service: name=apache2 state=started enabled=yes
     when: ansible_os_family=="Debian"
 
-#####Install && Start Web-Server on CentOS
+##### Install && Start Web-Server on CentOS
   - block:
       - name: Install httpd to CentOS
         yum: name=httpd state=latest
@@ -149,7 +113,7 @@
         service: name=httpd state=started enabled=yes
     when: ansible_os_family=="RedHat"
 
-#####Handlers
+##### Handlers
   handlers:
   - name: reload sshd.service
     service: name=sshd.service state=reloaded

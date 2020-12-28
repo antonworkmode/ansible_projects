@@ -1,3 +1,4 @@
 [myservers]
-vds ansible_host=89.223.93.104 ansible_user=root ansible_ssh_public_key_file=/root/.ssh/authorized_keys
-agent1 ansible_host=192.168.1.135 ansible_user=root ansible_ssh_public_key_file=/root/.ssh/authorized_keys
+vds    ansible_host=89.223.93.104
+agent1 ansible_host=192.168.1.137
+agent2 ansible_host=192.168.1.173
