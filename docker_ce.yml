@@ -1,0 +1,153 @@
+# Playbook for install Docker Engine and Docker Compose
+##########
+---
+- name: Install Docker Engine/Compose
+  hosts: all
+  become: yes
+
+# Install Docker Engine (Ubuntu, version 20)
+  tasks:
+  - block:
+    - name: Install packages
+      apt:
+        pkg:
+        - apt-transport-https
+        - ca-certificates
+        - curl
+        - software-properties-common
+        state: latest
+        update_cache: yes
+
+    - name: Add gpg-key for docker-repo
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add docker-repo
+      apt_repository:
+        repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable
+        state: present
+        update_cache: yes
+
+    - name: Update cache
+      apt:
+        update_cache: yes
+        force_apt_get: yes
+        cache_valid_time: 3600
+
+    - name: Install Docker Engine
+      apt:
+        pkg:
+         - docker-ce
+         - docker-ce-cli
+         - containerd.io
+        state: latest
+        update_cache: yes
+
+    - name: Start and Enable Docker
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Add current user in docker group
+      user:
+        name: anton
+        groups: docker
+        append: yes
+    when: ansible_os_family=="Debian"
+
+# Install Docker Engine (RedHat, version 8)
+  - block:
+    - name: Add docker-repo
+      shell: dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+      args:
+        creates: /etc/yum.repos.d/docker-ce.repo
+
+    - name: Remove packages
+      dnf:
+        pkg:
+        - podman
+        - buildah
+        state: absent
+
+    - name: Update cache
+      dnf:
+        update_cache: yes
+
+    - name: Install Docker Engine
+      dnf:
+        pkg:
+        - docker-ce
+        - docker-ce-cli
+        - containerd.io
+        state: latest
+        update_cache: yes
+
+    - name: Start and Enable Docker
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Add current user in docker group
+      user:
+        name: anton
+        groups: docker
+        append: yes
+    when: (ansible_os_family=="RedHat") and (ansible_distribution_major_version=="8")
+
+# Install Docker Engine (RedHat, version 7)
+  - block:
+    - name: Install "yum-utils" package
+      yum:
+        pkg: yum-utils
+        state: latest
+        update_cache: yes
+
+    - name: Add docker-repo
+      shell: yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+      args:
+        creates: /etc/yum.repos.d/docker-ce.repo
+
+    - name: Update cache
+      yum:
+        update_cache: yes
+
+    - name: Install Docker Engine
+      yum:
+        pkg:
+        - docker-ce
+        - docker-ce-cli
+        - containerd.io
+        state: latest
+        update_cache: yes
+
+    - name: Start and Enable Docker
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Add current user in docker group
+      user:
+        name: anton
+        groups: docker
+        append: yes
+    when: (ansible_os_family=="RedHat") and (ansible_distribution_major_version=="7")
+
+# Install Docker Compose
+  - name: Download Docker Compose binary file
+    get_url:
+      url: https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Linux-x86_64
+      dest: /usr/local/bin/docker-compose
+      mode: ugo+x
+
+  - name: Create a symbolic link
+    file:
+      src: /usr/local/bin/docker-compose
+      dest: /usr/bin/docker-compose
+      owner: root
+      group: root
+      state: link
+##########
